@@ -1,4 +1,6 @@
-package com.waracle.androidtest.datamodel;
+package com.networking.androidtest.datamodel;
+
+import com.google.gson.annotations.SerializedName;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -16,8 +18,13 @@ public class Cake {
     private static final String DESCRIPTION_JSON_KEY = "desc";
     private static final String IMAGE_URL_JSON_KEY = "image";
 
+    @SerializedName("title")
     private String mName;
+
+    @SerializedName("desc")
     private String mDescription;
+
+    @SerializedName("image")
     private String mImageUrl;
 
     /**

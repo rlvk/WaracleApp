@@ -1,8 +1,11 @@
-package com.waracle.androidtest;
+package com.networking.androidtest;
 
 import android.app.Application;
 import android.graphics.Bitmap;
 import android.support.v4.util.LruCache;
+
+import com.networking.androidtest.cache.DBHelper;
+import com.networking.androidtest.cache.SimpleDBCache;
 
 /**
  * Created by rafalwesolowski on 15/07/2016.
@@ -10,6 +13,7 @@ import android.support.v4.util.LruCache;
 public class TaskApplication extends Application {
 
     private static LruCache<String, Bitmap> mMemoryCache;
+    private SimpleDBCache mSimpleCache;
     private static TaskApplication _applicationInstance;
 
     @Override
@@ -40,6 +44,19 @@ public class TaskApplication extends Application {
 
     public static TaskApplication getInstance() {
         return _applicationInstance;
+    }
+
+    /**
+     * Returns instance of the database cache class.
+     *
+     * @return SimpleDBCache
+     */
+    public SimpleDBCache getNewLookCacheDb() {
+        if (mSimpleCache == null) {
+            DBHelper dbHelper = new DBHelper(getApplicationContext());
+            mSimpleCache = new SimpleDBCache(dbHelper);
+        }
+        return mSimpleCache;
     }
 
     /**

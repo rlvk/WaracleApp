@@ -1,4 +1,4 @@
-package com.waracle.androidtest.ui;
+package com.networking.androidtest.ui;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -13,10 +13,13 @@ import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.waracle.androidtest.R;
-import com.waracle.androidtest.api.ApiClient;
-import com.waracle.androidtest.datamodel.Cake;
-import com.waracle.androidtest.ui.adapter.MyAdapter;
+import com.networking.androidtest.R;
+import com.networking.androidtest.TaskApplication;
+import com.networking.androidtest.api.ApiClient;
+import com.networking.androidtest.cache.SimpleDBCache;
+import com.networking.androidtest.datamodel.Cake;
+import com.networking.androidtest.pipeline.Response;
+import com.networking.androidtest.ui.adapter.MyAdapter;
 
 import java.util.List;
 
@@ -30,10 +33,10 @@ import java.util.List;
  * Improve any performance issues
  * Use good coding practices to make code more secure
  */
-public class PlaceholderFragment extends Fragment implements LoaderManager.LoaderCallbacks<List<Cake>>{
+public class PlaceholderFragment extends Fragment implements LoaderManager.LoaderCallbacks<Response<List<Cake>>>{
 
     private static final String TAG = PlaceholderFragment.class.getSimpleName();
-    public static final int CAKES_ASYNC_LOADER = 1;
+    public static final int CAKES_ASYNC_LOADER_ID = 1;
 
     private ApiClient mApiClient;
     private RecyclerView mRecyclerView;
@@ -43,7 +46,10 @@ public class PlaceholderFragment extends Fragment implements LoaderManager.Loade
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mApiClient = ApiClient.getInstance(getContext());
+        TaskApplication taskApplication = (TaskApplication) getContext().getApplicationContext();
+        SimpleDBCache cacheDb = taskApplication.getNewLookCacheDb();
+
+        mApiClient = ApiClient.getInstance(getContext(), cacheDb);
     }
 
     @Override
@@ -62,16 +68,16 @@ public class PlaceholderFragment extends Fragment implements LoaderManager.Loade
 
         if (isAdded()) {
             LoaderManager loaderManager = getActivity().getSupportLoaderManager();
-            if (loaderManager.getLoader(CAKES_ASYNC_LOADER) == null) {
-                loaderManager.initLoader(CAKES_ASYNC_LOADER, null, this);
+            if (loaderManager.getLoader(CAKES_ASYNC_LOADER_ID) == null) {
+                loaderManager.initLoader(CAKES_ASYNC_LOADER_ID, null, this);
             } else {
-                loaderManager.restartLoader(CAKES_ASYNC_LOADER, null, this);
+                loaderManager.restartLoader(CAKES_ASYNC_LOADER_ID, null, this);
             }
         }
     }
 
     @Override
-    public Loader<List<Cake>> onCreateLoader(int id, Bundle args) {
+    public Loader<Response<List<Cake>>> onCreateLoader(int id, Bundle args) {
         if (mApiClient != null) {
             mProgressBar.setVisibility(View.VISIBLE);
             return mApiClient.createLoaderForCakes();
@@ -81,19 +87,31 @@ public class PlaceholderFragment extends Fragment implements LoaderManager.Loade
     }
 
     @Override
-    public void onLoadFinished(Loader<List<Cake>> loader, List<Cake> data) {
+    public void onLoadFinished(Loader<Response<List<Cake>>> loader, Response<List<Cake>> data) {
         mProgressBar.setVisibility(View.GONE);
-        if (data != null && !data.isEmpty()) {
-            MyAdapter myAdapter = new MyAdapter(loader.getContext(), data);
-            mRecyclerView.setAdapter(myAdapter);
-        } else {
-            if (isAdded()) {
-                Toast.makeText(getActivity(), R.string.something_went_wrong, Toast.LENGTH_SHORT).show();
+
+        if(data.getError() == null) {
+            List<Cake> cakesList = data.getData();
+            if (cakesList != null && !cakesList.isEmpty()) {
+                MyAdapter myAdapter = new MyAdapter(loader.getContext(), cakesList);
+                mRecyclerView.setAdapter(myAdapter);
+            } else {
+                //handle the error
+                showErrorMessage();
             }
+        } else {
+            //handle the error
+            showErrorMessage();
         }
     }
 
     @Override
-    public void onLoaderReset(Loader<List<Cake>> loader) {
+    public void onLoaderReset(Loader<Response<List<Cake>>> loader) {
+    }
+
+    private void showErrorMessage() {
+        if (isAdded()) {
+            Toast.makeText(getActivity(), R.string.something_went_wrong, Toast.LENGTH_SHORT).show();
+        }
     }
 }

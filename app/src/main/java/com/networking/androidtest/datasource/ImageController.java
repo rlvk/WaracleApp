@@ -1,13 +1,13 @@
-package com.waracle.androidtest.datasource;
+package com.networking.androidtest.datasource;
 
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.widget.ImageView;
 
-import com.waracle.androidtest.TaskApplication;
-import com.waracle.androidtest.api.DownloadImageTask;
-import com.waracle.androidtest.utils.BitmapUtil;
+import com.networking.androidtest.TaskApplication;
+import com.networking.androidtest.api.ImageLoader;
+import com.networking.androidtest.utils.BitmapUtil;
 
 /**
  * Created by rafalwesolowski on 15/07/2016.
@@ -32,8 +32,13 @@ public class ImageController {
      * Starts downloading the image and displaying in provided image view.
      *
      * @param imageView ImageView
+     * @param requiredWidth  Image required width
+     * @param requiredHeight Image required height
      */
-    public void loadBitmap(ImageView imageView) {
+    public void loadBitmap(ImageView imageView, int requiredWidth, int requiredHeight) {
+        if (mImageUrl == null || imageView == null) {
+            return;
+        }
 
         final Bitmap bitmap = TaskApplication.getInstance().getBitmapFromMemCache(mImageUrl);
         if (bitmap != null) {
@@ -42,15 +47,16 @@ public class ImageController {
         }
 
         if (cancelPotentialWork(mImageUrl, imageView)) {
-            final DownloadImageTask task = new DownloadImageTask(imageView);
-            final BitmapUtil.AsyncDrawable asyncDrawable = new BitmapUtil.AsyncDrawable(mContext.getResources(), null, task);
+            final ImageLoader imageLoader = new ImageLoader(imageView, requiredWidth, requiredHeight);
+            final BitmapUtil.AsyncDrawable asyncDrawable = new BitmapUtil.AsyncDrawable(mContext.getResources(),
+                    null, imageLoader);
             imageView.setImageDrawable(asyncDrawable);
-            task.execute(mImageUrl);
+            imageLoader.execute(mImageUrl);
         }
     }
 
     public static boolean cancelPotentialWork(String url, ImageView imageView) {
-        final DownloadImageTask bitmapWorkerTask = getDownloadBitmapTask(imageView);
+        final ImageLoader bitmapWorkerTask = getDownloadBitmapTask(imageView);
 
         if (bitmapWorkerTask != null) {
             final String imageUrl = bitmapWorkerTask.getImageUrl();
@@ -66,7 +72,7 @@ public class ImageController {
         return true;
     }
 
-    public static DownloadImageTask getDownloadBitmapTask(ImageView imageView) {
+    public static ImageLoader getDownloadBitmapTask(ImageView imageView) {
         if (imageView != null) {
             final Drawable drawable = imageView.getDrawable();
             if (drawable instanceof BitmapUtil.AsyncDrawable) {

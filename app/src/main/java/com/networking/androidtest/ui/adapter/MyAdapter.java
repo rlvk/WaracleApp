@@ -1,4 +1,4 @@
-package com.waracle.androidtest.ui.adapter;
+package com.networking.androidtest.ui.adapter;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
@@ -8,9 +8,10 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.waracle.androidtest.R;
-import com.waracle.androidtest.datamodel.Cake;
-import com.waracle.androidtest.datasource.ImageController;
+import com.networking.androidtest.R;
+import com.networking.androidtest.datamodel.Cake;
+import com.networking.androidtest.datasource.ImageController;
+import com.networking.androidtest.utils.DeviceUtils;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
@@ -22,6 +23,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.CakeViewHolder> {
 
     private final WeakReference<Context> mContext;
     private final List<Cake> mCakes;
+    private final int mImageRequiredWidth;
 
     /**
      * Constructor
@@ -30,6 +32,9 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.CakeViewHolder> {
      * @param cakes {@link List<Cake> }
      */
     public MyAdapter(Context context, List<Cake> cakes) {
+        // Assume that thumbnail will not be bigger size than half of the display width.
+        mImageRequiredWidth = DeviceUtils.getDisplayWidth(context) / 3;
+
         mContext = new WeakReference<>(context);
         mCakes = cakes;
     }
@@ -50,8 +55,9 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.CakeViewHolder> {
 
             String imageUrl = cake.getImageUrl();
             if (mContext != null && mContext.get() != null) {
+                // Assume that thumbnail will not be bigger size than half of the display width.
                 ImageController imageController = new ImageController(mContext.get(), imageUrl);
-                imageController.loadBitmap(holder.imageView);
+                imageController.loadBitmap(holder.imageView, mImageRequiredWidth, mImageRequiredWidth);
             }
     }
 

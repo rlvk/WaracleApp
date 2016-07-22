@@ -1,7 +1,9 @@
-package com.waracle.androidtest.utils;
+package com.networking.androidtest.utils;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
@@ -14,8 +16,8 @@ public class HttpUtils {
     /**
      * Returns InputStream from HttpConnection.
      *
-     * @param urlString
-     * @param method
+     * @param urlString            request url
+     * @param method               Request method
      * @return InputStream
      * @throws IOException
      */
@@ -26,9 +28,9 @@ public class HttpUtils {
 
         try {
             HttpURLConnection httpConnection = (HttpURLConnection) connection;
+            httpConnection.setUseCaches(true);
             httpConnection.setRequestMethod(method);
             httpConnection.setRequestProperty("Content-length", "0");
-            httpConnection.setConnectTimeout(10000);
             httpConnection.connect();
 
             int status = httpConnection.getResponseCode();
@@ -42,5 +44,29 @@ public class HttpUtils {
             ex.printStackTrace();
         }
         return stream;
+    }
+
+    /**
+     * Converts InputStream object to String
+     *
+     * @param in {@link InputStream}
+     * @return String
+     */
+    public static String convertStreamToString(InputStream in) {
+        InputStreamReader is = new InputStreamReader(in);
+        StringBuilder sb = new StringBuilder();
+        BufferedReader br = new BufferedReader(is);
+        String read = null;
+        try {
+            read = br.readLine();
+
+            while (read != null) {
+                sb.append(read);
+                read = br.readLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return sb.toString();
     }
 }
